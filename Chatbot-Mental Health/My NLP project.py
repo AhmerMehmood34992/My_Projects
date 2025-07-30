@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from nltk.tokenize import word_tokenize
-# import chardet
+et
 
 # with open("counselchat-data.csv", "rb") as file:
 #     result = chardet.detect(file.read())
@@ -9,7 +9,6 @@ from nltk.tokenize import word_tokenize
 import pandas as pd
 # d1=d1.rename(columns={'question':'Question','answer':'Answer'})
 
-# import chardet
 
 # with open("counselchat-data.csv", "rb") as file:
 #     result = chardet.detect(file.read())
@@ -49,7 +48,7 @@ df1=pd.DataFrame(d1)
 
 
 
-# load csv
+
 df=pd.DataFrame(pd.read_csv('Nlp_project_data.csv'))
 
 
@@ -57,17 +56,15 @@ df=pd.DataFrame(pd.read_csv('Nlp_project_data.csv'))
 # import csv
 # import re
 
-# # Define the regular expression pattern to match unwanted characters
-# # Retain letters, numbers, spaces, and punctuation like ., ?
+
 # pattern = re.compile(r'[^A-Za-z0-9\s\.\?]+|http\S+')
 
-# # Function to clean text
+
 # def clean_text(text):
 #     text = re.sub(pattern, '', text)  # Remove unwanted characters
 #     text = text.strip()              # Trim leading and trailing spaces
 #     return text
 
-# # List of CSV file paths and corresponding output files
 # csv_files = [
 #     {'input_file': 'Nlp_project_data.csv', 'output_file': 'cleaned_Nlp_project_data.csv'},
 #     # {'input_file': 'counselchat-data.csv', 'output_file': 'cleaned_counselchat.csv'}
@@ -80,7 +77,7 @@ df=pd.DataFrame(pd.read_csv('Nlp_project_data.csv'))
 
 #     print(f"Processing file: {input_file_path}")
 
-#     # Open the current CSV file and prepare to write the cleaned output
+#     # Open the CSV file and prepare to write the cleaned output
 #     with open(input_file_path, mode='r', newline='', encoding='utf-8') as infile, \
 #          open(output_file_path, mode='w', newline='', encoding='utf-8') as outfile:
         
@@ -89,9 +86,9 @@ df=pd.DataFrame(pd.read_csv('Nlp_project_data.csv'))
 #         writer = csv.DictWriter(outfile, fieldnames=fieldnames)
 #         writer.writeheader()  # Write the header to the output file
 
-#         # Iterate through each row in the CSV
+#         # Iterated through each row in the CSV
 #         for row in reader:
-#             # Clean specific columns if they exist
+#             # Clean  columns 
 #             if 'question' in row:
 #                 row['question'] = clean_text(row['question'])
 #             if 'answer' in row:
