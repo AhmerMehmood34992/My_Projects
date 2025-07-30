@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from nltk.tokenize import word_tokenize
-et
+from nltk.tokenize import word_tokenizer
+
 
 # with open("counselchat-data.csv", "rb") as file:
 #     result = chardet.detect(file.read())
