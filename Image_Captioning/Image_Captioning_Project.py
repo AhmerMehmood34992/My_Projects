@@ -10,15 +10,19 @@ Original file is located at
 !pip install opendatasets
 !pip install keras
 !pip install tensorflow
-# !pip install keras-tuner
-# !pip install nltk
+
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout, Concatenate, TimeDistributed,MultiHeadAttention
+from tensorflow.keras.layers import RepeatVector,Lambda
+
 
 from google.colab import drive
 drive.mount('/content/drive')
 
 import opendatasets as od
 od.download("https://www.kaggle.com/datasets/eeshawn/flickr30k?resource=download")
-# key   1844c451184f548f916db17e5bef1790
+
 
 !ls /content/drive/MyDrive/
 
@@ -32,9 +36,7 @@ df=df.drop("comment_number",axis=1)
 df["comment"] = df["comment"].str.replace(".", "", regex=False)
 
 
-# for removing any punctuation
-# import string
-# df["comment"] = df["comment"].str.translate(str.maketrans("", "", string.punctuation))
+
 
 
 
@@ -48,10 +50,8 @@ df['comment'][:5]
 
 from tensorflow.keras.preprocessing.text import Tokenizer
 
-# 1. Initialize tokenizer
 tokenizer = Tokenizer(num_words=12000,oov_token="Nothing")
 
-# # 2. Clean text
 df['comment'] = df['comment'].str.lower().str.strip()
 tokenizer.fit_on_texts(df['comment'])
 
@@ -64,10 +64,8 @@ tokenizer.fit_on_texts(df['comment'])
 
 vocab_size=min(12000,len(tokenizer.word_index)+1)
 
-# Convert to sequences using the tokenizer
 sequences = tokenizer.texts_to_sequences(df["comment"])
 
-# Now calculate max sequence length based on tokenized sequences
 max_seq_len = max(len(seq) for seq in sequences)
 max_seq_len
 
@@ -78,7 +76,7 @@ max_seq_len
 paded_seq=pad_sequences(sequences,maxlen=max_seq_len,padding='post',truncating='post')
 # paded_seq[:1]
 
-"""im ports"""
+"""imports"""
 
 import os
 import numpy as np
@@ -193,122 +191,9 @@ train_df.head()
 #     print("File size (bytes):", len(data))
 
 # from tensorflow.keras.preprocessing.sequence import pad_sequences
-# import numpy as np
-# import tensorflow as tf
 
-# def simple_data_generator(df, tokenizer, image_features, max_seq_len, batch_size=32):
-#     def generator():
-#         while True:  # Infinite loop for multiple epochs
-#             # Shuffle data each epoch
-#             df_shuffled = df.sample(frac=1, replace=True).reset_index(drop=True)
-#             X1, X2, y = [], [], []
 
-#             for i in range(len(df_shuffled)):
-#                 row = df_shuffled.iloc[i]
-#                 caption = row['comment']
-#                 img_id = row['image_name']
 
-#                 if img_id not in image_features:
-#                     continue
-
-#                 tokens = tokenizer.texts_to_sequences([caption])[0]
-
-#                 # Generate input-output pairs for the caption
-#                 for j in range(1, len(tokens)):
-#                     in_seq = tokens[:j]
-#                     out_word = tokens[j]
-
-#                     # Pad the input sequence
-#                     in_seq_padded = pad_sequences([in_seq], maxlen=max_seq_len, padding='post')[0]
-
-#                     X1.append(image_features[img_id])
-#                     X2.append(in_seq_padded)
-#                     y.append(out_word)
-
-#                     if len(X1) == batch_size:
-#                         # Yield inputs and targets. Keras handles masking with mask_zero=True in Embedding.
-#                         yield (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)), np.array(y, dtype=np.int32)
-#                         X1, X2, y = [], [], []
-
-#             # Last partial batch
-#             if len(X1) > 0:
-#                 yield (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)), np.array(y, dtype=np.int32)
-
-#     # Define the output signature for the generator
-#     # The generator yields (inputs, targets)
-#     output_signature = (
-#         (
-#             tf.TensorSpec(shape=(None, 2048), dtype=tf.float32),  # Image features
-#             tf.TensorSpec(shape=(None, max_seq_len), dtype=tf.int32),  # Text sequences
-#         ),
-#         tf.TensorSpec(shape=(None,), dtype=tf.int32),  # Labels
-#     )
-
-#     return tf.data.Dataset.from_generator(
-#         generator,
-#         output_signature=output_signature
-#     )
-
-# import numpy as np
-# import tensorflow as tf
-# from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-# def simple_data_generator(df, tokenizer, image_features, max_seq_len, batch_size=32):
-#     def generator():
-#         while True:  # infinite loop for multiple epochs
-#             df_shuffled = df.sample(frac=1).reset_index(drop=True)
-#             X1, X2, y, sw = [], [], [], []
-
-#             for i in range(len(df_shuffled)):
-#                 row = df_shuffled.iloc[i]
-#                 caption = row['comment']
-#                 img_id = row['image_name']
-
-#                 if img_id not in image_features:
-#                     continue
-
-#                 tokens = tokenizer.texts_to_sequences([caption])[0]
-
-#                 for j in range(1, len(tokens)):
-#                     in_seq = tokens[:j]
-#                     out_seq = tokens[j]
-#                     in_seq = pad_sequences([in_seq], maxlen=max_seq_len, padding='post')[0]
-
-#                     X1.append(image_features[img_id])
-#                     X2.append(in_seq)
-#                     y.append(out_seq)
-#                     sw.append(1.0 if out_seq != 0 else 0.0)  # mask (sample weight)
-
-#                     if len(X1) == batch_size:
-#                         yield (
-#                             (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)),
-#                             np.array(y, dtype=np.int32),
-#                             np.array(sw, dtype=np.float32)
-#                         )
-#                         X1, X2, y, sw = [], [], [], []
-
-#             # Yield final incomplete batch
-#             if len(X1) > 0:
-#                 yield (
-#                     (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)),
-#                     np.array(y, dtype=np.int32),
-#                     np.array(sw, dtype=np.float32)
-#                 )
-
-#     # Output signature must include sample_weight
-#     output_signature = (
-#         (
-#             tf.TensorSpec(shape=(None, 2048), dtype=tf.float32),            # Image features
-#             tf.TensorSpec(shape=(None, max_seq_len), dtype=tf.int32)        # Padded sequences
-#         ),
-#         tf.TensorSpec(shape=(None,), dtype=tf.int32),                       # Output labels
-#         tf.TensorSpec(shape=(None,), dtype=tf.float32)                      # Sample weights
-#     )
-
-#     return tf.data.Dataset.from_generator(generator, output_signature=output_signature)
-
-import numpy as np
-import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 sample=[]
 def full_sequence_data_generator(df, tokenizer, image_features, max_seq_len, batch_size=32):
@@ -369,8 +254,6 @@ def full_sequence_data_generator(df, tokenizer, image_features, max_seq_len, bat
 
     return tf.data.Dataset.from_generator(generator, output_signature=output_signature)
 
-from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout, Concatenate, TimeDistributed,MultiHeadAttention
-from tensorflow.keras.layers import RepeatVector,Lambda
 
 # Parameters
 embedding_dim = 256
@@ -405,7 +288,7 @@ attention_output = attention_layer(query=lstm2, value=img_vec, key=img_vec)
 # Combine attention output with LSTM output
 context = Concatenate()([lstm2, attention_output])
 
-# Final output layer and Time-distributed output layer
+# Final output layer and Time-distributed output layer(choose one)
 
 # Replace this:
 # Predict only the next word
@@ -500,63 +383,3 @@ model.fit(
 # Save the model
 model.save("caption_model.h5")
 
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-def full_sequence_data_generator(df, tokenizer, image_features, max_seq_len, batch_size=32):
-    vocab_size = len(tokenizer.word_index) + 1  # vocab size for output shape
-
-    def generator():
-        while True:
-            df_shuffled = df.sample(frac=1).reset_index(drop=True)
-            X1, X2, y, sw = [], [], [], []
-
-            for i in range(len(df_shuffled)):
-                row = df_shuffled.iloc[i]
-                caption = row['comment']
-                img_id = row['image_name']
-
-                if img_id not in image_features:
-                    continue
-
-                tokens = tokenizer.texts_to_sequences([caption])[0]
-                tokens = tokens[:max_seq_len - 1]  # reserve 1 slot for <end>
-                tokens.append(0)  # assume <end> token is 0 (optional)
-
-                input_seq = pad_sequences([tokens[:-1]], maxlen=max_seq_len, padding='post')[0]
-                output_seq = pad_sequences([tokens[1:]], maxlen=max_seq_len, padding='post')[0]
-
-                X1.append(image_features[img_id])
-                X2.append(input_seq)
-                y.append(output_seq)
-
-                # sample_weight: ignore padded positions
-                mask = [1.0 if token != 0 else 0.0 for token in output_seq]
-                sw.append(mask)
-
-                if len(X1) == batch_size:
-                    yield (
-                        (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)),
-                        np.array(y, dtype=np.int32),
-                        np.array(sw, dtype=np.float32)
-                    )
-                    X1, X2, y, sw = [], [], [], []
-
-            if len(X1) > 0:
-                yield (
-                    (np.array(X1, dtype=np.float32), np.array(X2, dtype=np.int32)),
-                    np.array(y, dtype=np.int32),
-                    np.array(sw, dtype=np.float32)
-                )
-
-    output_signature = (
-        (
-            tf.TensorSpec(shape=(None, 2048), dtype=tf.float32),
-            tf.TensorSpec(shape=(None, max_seq_len), dtype=tf.int32)
-        ),
-        tf.TensorSpec(shape=(None, max_seq_len), dtype=tf.int32),              # Full output sequence
-        tf.TensorSpec(shape=(None, max_seq_len), dtype=tf.float32)            # Sample weights (mask)
-    )
-
-    return tf.data.Dataset.from_generator(generator, output_signature=output_signature)
